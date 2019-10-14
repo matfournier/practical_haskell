@@ -20,4 +20,12 @@ Pg 221 in the type `Settings` you don't need the `user :: Person` as it looks li
 Pg 223 Exercise 6-6 you need to implement `Functor` and `Applicative` in order to implement `Monad`.  That's what the type error is going to
 tell you in this question.
 
+## Ch7 
 
+Pg 240 Exercise 7-3 should include InfoClientGender Male 
+
+Pg 241 Apriori Algorithm - I found [this page](https://www.hackerearth.com/blog/developers/beginners-tutorial-apriori-algorithm-data-mining-r-implementation/) for what the algorithm was doing 
+
+Pg 250 The referenced paper: [Adventures in three
+monads](http://web.mit.edu/~ezyang/Public/threemonads.pdf) by Edward Z. Yang.
+Note to self: has a good overview of MonadFail typeclass 
