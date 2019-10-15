@@ -29,3 +29,8 @@ Pg 241 Apriori Algorithm - I found [this page](https://www.hackerearth.com/blog/
 Pg 250 The referenced paper: [Adventures in three
 monads](http://web.mit.edu/~ezyang/Public/threemonads.pdf) by Edward Z. Yang.
 Note to self: has a good overview of MonadFail typeclass 
+
+Pg 254 Exercise 7-5 the signature for sequence is `monad m => [m a] -> m [a]`
+
+Pg 262 This is a [good introduction to monad transformers that is more clear
+than the book](https://two-wrongs.com/a-gentle-introduction-to-monad-transformers)

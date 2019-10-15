@@ -2,7 +2,8 @@ module Ch7Paths where
 
 import           Control.Monad
 import           Control.Monad.Logic
-
+import           Control.Monad.Reader
+import           Control.Monad.Writer
 
 
 -- graph given by list of edges (start, end)
@@ -115,3 +116,103 @@ pathsLFair edges start end =
         guard (e_start == start) >> pathsL' edges e_end end >>- \subpath ->
           return $ start : subpath
   in  if start == end then return [end] `interleave` e_paths else e_paths
+
+-- Combining values under a monad
+
+-- scala: traverse
+-- mapM:  Monad m => (a -> m b) -> [a] -> m [b]
+
+addPrefix :: String -> Reader String String
+addPrefix s = ask >>= \p -> return $ p ++ s
+
+-- say we have some simple fn that prepends on string to another
+-- but instead of using an extra param, you want to use some global context
+-- modeled with the reader Monad
+
+-- if you now have a list of strings you want to prefix with that first string
+-- your intuition may be to use map. but..
+
+-- :t map addPrefix
+-- map addPrefix :: [String] -> [Reader String String]
+-- we get a bunch of readers which is not what we want -- each needs a context
+
+addPrefixL :: [String] -> Reader String [String]
+addPrefixL = mapM addPrefix
+
+-- this makes much more sense.
+
+-- in some cases you don't care about ht eresults of the computation
+--   just that effectit has on the things in a list
+--   e.g. logging a bunch of data
+--   you don't care about the return
+-- this is a job for mapM_
+
+
+logInformation :: [String] -> Writer String ()
+logInformation = mapM_ (\s -> tell (s ++ "\n"))
+
+-- runwWriter $ logInformation ["one", "two"]
+-- ((), "one\n\two\n")
+
+-- forM and forM_ are the same just arguements reversed
+-- so list comes first
+-- kinda looks like a foreach
+
+
+-- exercise 7.5
+-- try to write the definition of sequence
+-- do it using do notation and pattern matching
+-- like with any other list function you should consider the cases of the empty list
+-- with some head and tail: remember that x <- "v" extracts the value wrapped in a monad from
+-- v : m a into a binding of x :: a
+-- for the mapM function, the hints is to write it as a composition of two other functions
+-- the ones you should use have already been showcased in the example of prefixing a list
+-- of strings with a common prefix from a shared context
+
+
+
+-- I have no idea what the hint is. This made sense?
+
+mapM' :: Monad m => (a -> m b) -> [a] -> m [b]
+mapM' _ []       = return []
+mapM' f (x : xs) = do
+  fx   <- f x
+  rest <- mapM' f xs
+  return $ fx : rest
+
+addPrefixL' :: [String] -> Reader String [String]
+addPrefixL' = mapM' addPrefix
+
+
+-- just use mapM' with identity?
+sequence' :: Monad m => [m a] -> m [a]
+sequence' ma = mapM' id ma
+
+-- as per the instructions
+sequence'' :: Monad m => [m a] -> m [a]
+sequence'' []       = return []
+sequence'' (x : xs) = do
+  xUnwrapped <- x
+  rest       <- sequence'' xs
+  return $ xUnwrapped : rest
+
+-- the behavior of sequence/mapM is mostly determined by
+-- the monad
+
+-- there are also folds that work under  amonad e..g foldM
+-- foldM :: Monad m => (a -> b -> m a) -> a -> [b] -> m a
+
+-- foldM always preforms a left fold.
+
+-- a ver. of factorial that takes care of the # of folding steps needed for evaluation
+
+factorialSteps :: Integer -> Writer (Sum Integer) Integer
+factorialSteps n = foldM (\f x -> tell (Sum 1) >> return (f * x)) 1 [1 .. n]
+
+-- filterM
+-- filters some value based on some monadic predicate
+
+powerset :: [a] -> [[a]]
+powerset == filterM (\_ -> [False, True])
+
+-- monad comprehensions: skipped
