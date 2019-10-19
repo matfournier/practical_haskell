@@ -3,6 +3,7 @@ module Ch7Transformers where
 import           Control.Monad
 import           Control.Monad.Writer
 import           Control.Monad.Reader
+import           Control.Monad.State
 import           Data.List
 
 -- rolling own monad combination
@@ -93,3 +94,20 @@ readerWriterExample = do
 -- thus you must use lift to access one of the internal states
 -- the final code to run the monad computation should be
 -- similar to execState (execStateT factorial x ) 1
+
+factorialState' :: StateT Int (State Int) ()
+factorialState' = do
+  n <- get
+  lift $ modify (* n)
+  modify (subtract 1)
+  unless (n == 1) factorialState'
+
+factorialState :: Int -> Int
+factorialState n = execState (execStateT factorialState' n) 1
+
+factorial :: Int -> Int
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+
+check :: Int -> Bool
+check n = factorial n == factorialState n
