@@ -1,9 +1,13 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Ch7Transformers where
 
 import           Control.Monad
 import           Control.Monad.Writer
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           Control.Monad.RWS
+import           Data.Foldable
 import           Data.List
 
 -- rolling own monad combination
@@ -48,6 +52,10 @@ pathsWriter' edges start end =
 
 -- e.g. lift edges :: WriterT [Int] [] ()
 
+
+-- This WORKS and needs to be re-written in exercise 7-7 using
+-- MonadReader and MonadWriter
+
 pathsWriterT' :: [(Int, Int)] -> Int -> Int -> WriterT [Int] [] ()
 pathsWriterT' edges start end =
   let e_paths = do
@@ -84,6 +92,8 @@ readerWriterExample = do
 -- (4, "3")
 
 -- Exercise 7.6 two states at a time
+
+
 -- write a fn that compues the factorial of a number
 -- instead of the usual implementation, use one based on two states:
 
@@ -111,3 +121,68 @@ factorial n = n * factorial (n - 1)
 
 check :: Int -> Bool
 check n = factorial n == factorialState n
+
+
+
+readerWriterExampleMTL :: (MonadReader Int m, MonadWriter String m) => m Int
+readerWriterExampleMTL = do
+  x <- ask
+  tell $ show x
+  return $ x + 1
+
+-- Exercise 7.7 - SUPER CONFUSED
+-- exact problem statement
+-- write a new version of pathsWriter that holds the graph in a read-only context.
+-- this means you need to use the functionality from both MonadReader (for handling
+-- the graph) and MonadWriter (for handling the paths) wrapping the base list monad.
+-- to check that the function is general, use two different monads to provide the
+-- requested functionality: ReaderT r (writerT w []) a and RWST r w s a.
+
+-- after hours and hours I have no fucking clue
+-- using guard it complains about no instance of MonadPlus for identity (there isn't one!)
+-- or running into the problem of trying to arbitrarily lift the list monad into the stack
+-- doesn't seem to be working.
+-- someone on SO had this problem back in 2014:
+-- https://stackoverflow.com/questions/24195617/use-list-monad-inside-monad-transformer-type-classes
+-- but the solution throws an error ("Exception: user error (mzero)")
+-- no clue why this explodes with an exception
+pathsWriterMTL'
+  :: (MonadReader [(Int, Int)] m, MonadWriter [Int] m, MonadPlus m)
+  => Int
+  -> Int
+  -> m ()
+pathsWriterMTL' start end =
+  let e_paths = do
+        (e_start, e_end) <- ask >>= msum . map return
+        guard $ e_start == start
+        tell [start]
+        pathsWriterMTL' e_end end
+  in  if start == end then tell [start] else e_paths
+
+pathsWriterMTL start end graph =
+  runWriterT (runReaderT (pathsWriterMTL' start end) graph)
+
+
+-- trying a version just using stacked monad transformers which works
+-- even though the version above throws the exception
+-- runWriterT ( runReaderT (paths' 2013 2558) graph1 )
+-- but the whole `ask >>= msum . map return` is magic
+-- this entire question sucks.
+
+paths' :: Int -> Int -> ReaderT [(Int, Int)] (WriterT [Int] []) ()
+paths' start end =
+  let e_paths = do
+        (e_start, e_end) <- ask >>= msum . map return
+        guard $ e_start == start
+        tell [start]
+        paths' e_end end
+  in  if start == end then tell [start] else e_paths
+
+
+graph1 :: [(Int, Int)]
+graph1 = [(2013, 501), (2013, 1004), (501, 2558), (1004, 2558)]
+
+someFunct :: ReaderT [(Int, Int)] [] Int
+someFunct = do
+  (s0, e0) <- ask >>= msum . map return
+  return s0

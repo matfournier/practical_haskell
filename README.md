@@ -34,3 +34,18 @@ Pg 254 Exercise 7-5 the signature for sequence is `monad m => [m a] -> m [a]`
 
 Pg 262 This is a [good introduction to monad transformers that is more clear
 than the book](https://two-wrongs.com/a-gentle-introduction-to-monad-transformers)
+
+Pg 263 Exercise 7.6 was very clear once I read a few exampls [here in the monad
+transformers section ](http://dev.stephendiehl.com/fun/basics.html)
+
+Pg 264 Exercise 7.7 *This exercise is terrible* and I have no idea what the author
+wants. I spent 6+ hours on this.  Eventually came across [this SO post from his
+firstbook](https://stackoverflow.com/questions/24195617/use-list-monad-inside-monad-transformer-type-classes)
+although the solution crashes with an exception (!!!) around mzero in my
+`ch7Transformers.hs` file.  I wrote a version using ReaderT / WriterT explicitly
+and it works although I find the lifting of the list monad using `ask >>= msum .
+map return` to be super confusing.  I have no idea what the author wants and if
+anyone knows please open an issue and explain it [or track me down on twitter in
+this discussion when I was asking the world about this
+question](https://twitter.com/fried_brice/status/1185815297250320385
+)
