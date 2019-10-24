@@ -49,3 +49,12 @@ anyone knows please open an issue and explain it [or track me down on twitter in
 this discussion when I was asking the world about this
 question](https://twitter.com/fried_brice/status/1185815297250320385
 )
+
+## Ch 8 
+
+Skipping. I've worked through a bunch of [parallel and concurrent programming in
+haskell](https://simonmar.github.io/pages/pcph.html) before so I'm moving onto
+the next chapter. 
+
+## Ch 9 
+
