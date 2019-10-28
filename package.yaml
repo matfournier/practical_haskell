@@ -27,6 +27,9 @@ dependencies:
 - monad-loops >= 0.4 && <= 0.4.3
 - random >= 1.0 && <= 1.1
 - conduit >= 1.3.1 && <= 1.3.2
+- conduit-extra >= 1.3.0 && <= 1.3.1
+- bytestring >= 0.10.1 && <= 0.11
+- network >= 2.8.0 && <= 2.8.1
 
 library:
   source-dirs: src

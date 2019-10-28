@@ -117,9 +117,7 @@ myFilter f = do
   case maybeV of
     Nothing -> return ()
     Just v  -> do
-      case f v of
-        True  -> yield v
-        False -> return ()
+      if f v then yield v else return ()
       myFilter f
 
 -- Exercise 9.4 implement fold

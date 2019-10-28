@@ -58,3 +58,5 @@ the next chapter.
 
 ## Ch 9 
 
+- Accessing files pg 332 need to bring in package `conduit-extra`
+- winnersFile example on pg 333 make sure to concat `<> BS.pack \n` 
