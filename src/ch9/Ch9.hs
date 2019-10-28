@@ -1,12 +1,18 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Ch9 where
 import           Control.Monad.Loops
 import           Control.Monad.Reader
 import           System.Random
 import           Data.Char
+import           Data.List
+import           Control.Monad.Except
+import           Control.Exception
+import           System.IO.Error
 
-data Person = Person { _firstName :: String, _lastName :: String } deriving (Eq, Show)
+
+data Person = Person { _firstName :: String, _lastName :: String } deriving (Eq, Show, Ord)
 
 boop :: IO ()
 boop = do
@@ -67,7 +73,7 @@ randomDo = do
 
 
 -- exercise 9-1
-
+-- make a guessing game with console input
 
 data GameConfig = GameConfig { _min :: Int
                              , _max :: Int
@@ -115,3 +121,59 @@ game = do
     )
   target <- randomRIO (_min cfg, _max cfg)
   runReaderT (readerGameLoop target 0) cfg
+
+getJumps :: StdGen -> Int -> [Int]
+getJumps gen initial = unfoldr
+  (\g ->
+    let (next, nextG) = randomR (0, 3000) g
+    in  if next == initial then Nothing else Just (next, nextG)
+  )
+  gen
+
+getJumpsDo = do
+  (initial :: Int) <- fmap read getLine
+  gen              <- getStdGen
+  print $ take 10 $ getJumps gen initial
+
+-- ex 9.2 skipping, did FH before and not interested
+
+-- ## Error Handling
+data Client i = GovOrg  { clientId :: i, clientName :: String }
+              | Company { clientId :: i, clientName :: String
+                        , person :: Person, duty :: String }
+              | Individual { clientId :: i, person :: Person }
+              deriving (Show, Eq, Ord)
+
+data CompanyNameError = GovOrgArgument | IndividualArgument
+
+companyName :: Client i -> Either CompanyNameError String
+companyName Company { clientName = n } = Right n
+companyName GovOrg{}                   = Left GovOrgArgument
+companyName Individual{}               = Left IndividualArgument
+
+
+-- class Monad m => MonadError e m | m -> e where
+--   throwError :: e -> m a
+--   catchError :: m a -> (e -> m a) -> m a
+
+companyName' :: MonadError CompanyNameError m => Client i -> m String
+companyName' Company { clientName = n } = return n
+companyName' GovOrg{}                   = throwError GovOrgArgument
+companyName' Individual{}               = throwError IndividualArgument
+
+
+doIoError =
+  do
+      clients           <- fmap lines $ readFile "clients.db"
+      clientsAndWinners <- mapM
+        (\c -> do
+          (winner :: Bool) <- randomIO
+          (year :: Int   ) <- randomRIO (0, 3000)
+          return (c, winner, year)
+        )
+        clients
+      writeFile "clientsWinners.db" $ concatMap show clientsAndWinners
+    `catch` (\(e :: IOException) -> if isDoesNotExistError e
+              then putStrLn "File Does not exist"
+              else putStrLn $ "other error: " ++ show e
+            )
