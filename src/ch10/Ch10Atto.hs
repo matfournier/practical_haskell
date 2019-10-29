@@ -7,7 +7,9 @@ module Ch10Atto where
 import           Control.Applicative
 import           Data.Text
 import           Data.Attoparsec.Text
-
+import qualified Data.Text.Lazy.Builder        as B
+import qualified Data.Text.Lazy.Builder.Int    as B
+import qualified Data.Text.Lazy                as LT
 
 
 data GreetingYear = GreetingYear Text Int
@@ -77,3 +79,79 @@ aString = ((:) <$> aChar <*> aString) <|> (pure "")
 
 -- Alternative f => f a -> f [a]
 aString' = many aChar
+
+
+data Person = Person { firstName :: String, lastName :: String }
+            deriving (Show, Eq, Ord, Read)
+data Client i = GovOrg  { clientId :: i, clientName :: String }
+              | Company { clientId :: i, clientName :: String
+                        , person :: Person, duty :: String }
+              | Individual { clientId :: i, person :: Person }
+              deriving (Show, Eq, Ord)
+
+escapeString :: String -> Text
+escapeString =
+  replace "\n" "\\n"
+    . replace "," "\\,"
+    . replace "(" "\\("
+    . replace ")" "\\("
+    . pack
+
+personToText :: Person -> Text
+personToText (Person f l) =
+  "person(" <> escapeString f <> "," <> escapeString l <> ")"
+
+clientToText :: Client Int -> Text
+clientToText (GovOrg i n) =
+  "client(gov," <> escapeString (show i) <> "," <> escapeString n <> ")"
+clientToText (Company i n p d) =
+  "client(com,"
+    <> escapeString (show i)
+    <> ","
+    <> escapeString n
+    <> ","
+    <> personToText p
+    <> ","
+    <> escapeString d
+    <> ")"
+clientToText (Individual i p) =
+  "client(ind," <> escapeString (show i) <> "," <> personToText p <> ")"
+
+-- (<$), function application that drops it's first arguement
+-- its the same as `fmap  . const`
+-- e.g. 2 <$ [1,2,3] == [2,2,2]
+
+aPerson :: Parser Person
+aPerson =
+  Person <$ string "person(" <*> aString <* char ',' <*> aString <* char ')'
+
+aClient :: Parser (Client Int)
+aClient =
+  GovOrg
+    <$  string "client(gov,"
+    <*> decimal
+    <*  char ','
+    <*> aString
+    <*  char ')'
+    <|> Company
+    <$  string "client(com,"
+    <*> decimal
+    <*  char ','
+    <*> aString
+    <*  char ','
+    <*> aPerson
+    <*  char ','
+    <*> aString
+    <*  char ')'
+    <|> Individual
+    <$  string "client(ind,"
+    <*> decimal
+    <*  char ','
+    <*> aPerson
+    <*  char ')'
+
+-- let co = Company 1 "Black Hole Inc." (Person "John" "Smith") "Traveller"
+-- let b = clientToText co
+--   results in
+--     "client(com,1,Black Hole Inc.,person(John,Smith),Traveller)"
+-- parseOnly aClient b

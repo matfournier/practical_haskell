@@ -60,3 +60,15 @@ the next chapter.
 
 - Accessing files pg 332 need to bring in package `conduit-extra`
 - winnersFile example on pg 333 make sure to concat `<> BS.pack \n` 
+
+## Ch 10 
+
+Note: skipping most of the exercises in this chapter as they are tedious AF.  Parsing is super
+interesting and there are more fun ways to play with them: see
+[here](https://blog.ploeh.dk/2019/10/28/a-basic-haskell-solution-to-the-robot-journeys-coding-exercise/)
+and [particularly this
+one](https://github.com/Cmdv/Haskell-Interview-Tests/tree/master/src/SpiralWorld.hs)
+
+- pg 359 you don't need the `let c = ` part, you can just run `parseOnly aClient b` instead 
+
+- Ex 10-1 skipped, Ex 10-2 skipped
