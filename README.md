@@ -72,3 +72,12 @@ one](https://github.com/Cmdv/Haskell-Interview-Tests/tree/master/src/SpiralWorld
 - pg 359 you don't need the `let c = ` part, you can just run `parseOnly aClient b` instead 
 
 - Ex 10-1 skipped, Ex 10-2 skipped
+
+- Ex 10-3 
+
+This was a bit of a pita actually. The clientToJson written in the book
+is for the Integer type, the question uses the Int type so watch out for that 
+Encoding doubles: need to use `realToFrac`.  Encoding the list of 
+products led me to [this](https://artyom.me/aeson) which led me to 
+the `fromList` fn from `GHC.Ext` which isn't mentioned in the book. 
+
