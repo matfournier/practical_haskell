@@ -9,6 +9,12 @@ import           Data.Aeson.Types
 import           Control.Applicative
 import           GHC.Exts
 
+import           Data.Conduit
+import qualified Data.Conduit.Binary           as B
+import qualified Data.Conduit.List             as L
+import qualified Data.ByteString.Lazy          as LB
+import qualified Data.ByteString               as BS
+import qualified Data.List                     as DT
 import qualified Data.HashMap.Strict           as M
 
 -- Data types
@@ -169,3 +175,53 @@ purchaseToJson (Purchase c p) = object
   [ "client" .= clientToJSONi c
   , "products" .= Array (fromList $ fmap productToJson p)
   ]
+
+
+instance ToJSON Purchase where
+  toJSON = purchaseToJson
+
+instance FromJSON Purchase where
+  parseJSON = jsonToPurchase
+
+-- winnersFile :: (Monad m, MonadIO m)
+--             => ConduitT BS.ByteString BS.ByteString m ()
+-- winnersFile = do
+--   client <- await
+--   case client of
+--     Nothing -> return ()
+    -- Just c  -> do (w :: Bool) <- liftIO $ randomIO
+    --               (y :: Int ) <- liftIO $ randomRIO (0, 3000)
+    --               yield $ c <> B
+
+  -- main = runConduit $
+  --        B.sourceFile "clients.db" .| B.lines .| winnersFile
+  --                                  .| B.sinkFile "clientsWinners.db"
+
+-- saveClients :: FilePath -> [Client Integer] -> IO ()
+-- saveClients fPath clients = runConduitRes $
+--   yield (toJSON clients) .| L.map (LB.toStrict . encode)
+--                          .| B.sinkFile fPath
+
+avgForClient :: Purchase -> Double
+avgForClient (Purchase _ products) =
+  let n      = fromIntegral $ DT.length products
+      totals = sum $ price <$> products
+  in  totals / n
+
+
+-- this works if the json is all on the same line
+-- but if the json is broken over several lines this will return
+-- null null null null
+-- I think the correct thing to use is conduit-attoparsec
+-- see this SO here: https://stackoverflow.com/questions/19511678/conduit-with-aeson-attoparsec-how-to-exit-cleanly-without-exception-once-sour
+
+
+main :: IO ()
+main =
+  runConduitRes
+    $  B.sourceFile "ch10.json"
+    .| B.lines
+    .| L.map (LB.fromStrict)
+    .| L.map (\x -> (fmap avgForClient $ decode x))
+    .| L.map (LB.toStrict . encode)
+    .| B.sinkFile "ch10.out.json"
